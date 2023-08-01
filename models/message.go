@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // Message represents an anonymous chat message.
 type Message struct {
@@ -8,6 +10,7 @@ type Message struct {
 	Nickname  string    // The nickname of the user (optional).
 	Text      string    // The content of the message.
 	Timestamp time.Time // The timestamp when the message was created.
+	Username  string
 }
 
 var messages []Message
@@ -27,6 +30,16 @@ func GetMessagesByUserID(userID string) []Message {
 	var userMessages []Message
 	for _, message := range messages {
 		if message.UserID == userID {
+			userMessages = append(userMessages, message)
+		}
+	}
+	return userMessages
+}
+
+func GetMessagesByUsername(username string) []Message {
+	var userMessages []Message
+	for _, message := range messages {
+		if message.Username == username {
 			userMessages = append(userMessages, message)
 		}
 	}
