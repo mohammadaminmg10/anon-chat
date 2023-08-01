@@ -25,7 +25,7 @@ func setUserID(w http.ResponseWriter, username string) {
 }
 
 // isLoggedIn checks if the user is already logged in by checking if the username cookie exists.
-func isLoggedIn(r *http.Request) bool {
+func IsLoggedIn(r *http.Request) bool {
 	cookie, err := r.Cookie(cookieName)
 	if err == nil && cookie != nil {
 		return true
@@ -34,7 +34,7 @@ func isLoggedIn(r *http.Request) bool {
 }
 
 // getUserID retrieves the user's username from the session (cookie).
-func getUserID(r *http.Request) string {
+func GetUserID(r *http.Request) string {
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		return ""
@@ -59,9 +59,9 @@ func generateUserID(w http.ResponseWriter) string {
 func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		// Check if the user is already logged in
-		if isLoggedIn(r) {
+		if IsLoggedIn(r) {
 			// If the user is already logged in, redirect to their chat room
-			http.Redirect(w, r, "/user/"+getUserID(r), http.StatusSeeOther)
+			http.Redirect(w, r, "/user/"+GetUserID(r), http.StatusSeeOther)
 			return
 		}
 

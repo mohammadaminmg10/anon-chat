@@ -5,8 +5,8 @@ import (
 	"anon-chat/registration"
 	_ "fmt"
 	"html/template"
-	"log"
 	"net/http"
+	"strings"
 )
 
 var templates = template.Must(template.ParseFiles("views/index.html"))
@@ -46,27 +46,32 @@ func getUserID(r *http.Request) string {
 }
 
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
-		// Check if the user is logged in
-		if !isLoggedIn(r) {
-			// If the user is not logged in, redirect to the registration page
-			http.Redirect(w, r, "/register", http.StatusSeeOther)
-			return
+	userID := registration.GetUserID(r)
+
+	if strings.HasPrefix(r.URL.Path, "/usr/") {
+		// Extract the username from the URL
+		username := strings.TrimPrefix(r.URL.Path, "/usr/")
+
+		// Check if the logged-in user is the owner of the chat room or if it's an anonymous visitor
+		isOwner := (userID != "" && userID == username)
+
+		var messages []models.Message
+		if isOwner {
+			// If the user is the owner, fetch all messages associated with their username
+			messages = models.GetMessagesByUsername(username)
+		} else if userID != "" {
+			// If the user is logged in (not anonymous), fetch messages they sent themselves
+			messages = models.GetMessagesByUserID(userID)
 		}
 
-		// Get the username from the session (cookie)
-		username := getUserID(r)
-
-		// Get all messages associated with the current user's username
-		chatRoomMessages := models.GetMessagesByUsername(username)
-
-		// Render the template with the messages and the current user's username
 		data := struct {
-			Messages []models.Message
 			Username string
+			IsOwner  bool
+			Messages []models.Message
 		}{
-			Messages: chatRoomMessages,
 			Username: username,
+			IsOwner:  isOwner,
+			Messages: messages,
 		}
 
 		err := templates.Execute(w, data)
@@ -77,8 +82,24 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// In case the path is not "/", return an error response.
-	http.Error(w, "Page Not Found", http.StatusNotFound)
+	// If the path is not "/usr/username", it's an anonymous visitor trying to send a message.
+	// We'll display the chat history for all users and the chat field for anonymous messages.
+
+	data := struct {
+		Messages []models.Message
+		Username string
+		IsUser   bool
+	}{
+		Messages: models.GetMessages(),
+		Username: userID,
+		IsUser:   (userID != ""), // Check if the user is logged in or anonymous
+	}
+
+	err := templates.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func HandleSend(w http.ResponseWriter, r *http.Request) {
@@ -86,16 +107,8 @@ func HandleSend(w http.ResponseWriter, r *http.Request) {
 		nickname := r.FormValue("nickname")
 		messageText := r.FormValue("message")
 
-		// Extract useful information from the request
-		userAgent := r.UserAgent()
-		ipAddress := r.RemoteAddr
-		// You can access other headers as needed: r.Header.Get("Header-Name")
-
-		userID := getUserID(r) // Get the user's unique identifier from the cookie.
-
-		// Log the received message and associated information
-		log.Printf("Received message from UserID: %s, Nickname: %s, IP: %s, UserAgent: %s",
-			userID, nickname, ipAddress, userAgent)
+		// Check if the user is logged in (not anonymous)
+		userID := registration.GetUserID(r)
 
 		message := models.Message{
 			UserID:   userID, // Associate the message with the user's unique identifier.
@@ -105,10 +118,14 @@ func HandleSend(w http.ResponseWriter, r *http.Request) {
 
 		models.SaveMessage(message)
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-	}
-}
+		// If the user is anonymous (not logged in), redirect to the chat history page
+		if userID == "" {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
 
-func HandleRegister(w http.ResponseWriter, r *http.Request) {
-	registration.HandleRegister(w, r)
+		// If the user is logged in, redirect back to the same chat room page with their messages
+		username := "mo@amin"
+		http.Redirect(w, r, "/usr/"+username, http.StatusSeeOther)
+	}
 }
