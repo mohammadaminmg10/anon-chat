@@ -51,12 +51,13 @@
 </head>
 <body>
 <div class="container">
-    <h1>Anonymous Chat</h1>
+    <h1>GoAnonymous</h1>
+    <h2 class="card-subtitle mb-2 text-muted">Anonymous GopherGram</h2>
 
     {{ if .IsOwner }}
-    <h2>Welcome, {{ .Username }}!</h2>
+    <h3>Welcome, {{ .Username }}!</h3>
     {{ else }}
-    <h2>Chat with {{ .Username }}!</h2>
+    <h3>Chat with {{ .Username }}!</h3>
     {{ end }}
 
     {{ if .IsUser }}
