@@ -13,6 +13,9 @@
     <h2>Welcome, {{ .Username }}!</h2>
     {{ else }}
     <h2>Chat with {{ .Username }}!</h2>
+    {{ end }}
+
+    {{ if .IsUser }}
     <div>
         <!-- Form to submit new message -->
         <form action="/send" method="post">
@@ -29,6 +32,7 @@
     </div>
     {{ end }}
 
+    {{ if .IsOwner }}
     <div class="mt-4">
         <!-- Chat history display -->
         <h2>Chat History:</h2>
@@ -38,6 +42,7 @@
             {{ end }}
         </ul>
     </div>
+    {{ end }}
 </div>
 </body>
 </html>

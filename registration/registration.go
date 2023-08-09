@@ -1,12 +1,23 @@
 package registration
 
 import (
-	"github.com/google/uuid"
+	"github.com/golang-jwt/jwt/v4"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 var registerTemplate = template.Must(template.ParseFiles("views/register.html"))
+
+type Claims struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	jwt.RegisteredClaims
+}
+
+const jwtCookieName = "jwt_token"
+
+var jwtKey = []byte("n7hUjNdqoF9q5jSk3zDpW2vR1zHtY8dA")
 
 const cookieName = "user_cookie"
 
@@ -42,20 +53,6 @@ func GetUserID(r *http.Request) string {
 	return cookie.Value
 }
 
-func generateUserID(w http.ResponseWriter) string {
-	userID := uuid.New().String()
-
-	cookie := http.Cookie{
-		Name:     "user_id",
-		Value:    userID,
-		HttpOnly: true,
-	}
-
-	http.SetCookie(w, &cookie)
-
-	return userID
-}
-
 func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		// Check if the user is already logged in
@@ -77,15 +74,39 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		// Handle user registration form submission
 		username := r.FormValue("username")
+		password := r.FormValue("password")
 
 		// Perform any necessary validation on the username (e.g., check if it's unique, alphanumeric, etc.)
 		// For simplicity, let's assume the username is always valid and unique for now.
 
-		// Save the username and its associated user identifier in the session (cookie-based)
-		setUserID(w, username)
+		// Generate a JWT token for the user
+		expirationTime := time.Now().Add(5 * time.Minute)
+		claims := &Claims{
+			Username: username,
+			Password: password,
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(expirationTime),
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		tokenString, err := token.SignedString(jwtKey)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 
-		// Redirect the user to their chat room page
+		// Set the JWT token as a cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     jwtCookieName,
+			Value:    tokenString,
+			Expires:  expirationTime,
+			HttpOnly: true,
+		})
+
+		// Set the username in the user_cookie and redirect to their chat room
+		setUserID(w, username)
 		http.Redirect(w, r, "/user/"+username, http.StatusSeeOther)
+		return
 	}
 
 	// In case the method is not GET or POST, return an error response.
