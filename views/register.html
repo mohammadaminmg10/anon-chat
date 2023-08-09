@@ -2,15 +2,36 @@
 <html>
 <head>
     <title>Anonymous Chat - Register</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .card {
+            width: 400px;
+        }
+    </style>
 </head>
 <body>
-<h1>Register</h1>
-<form action="/register" method="post">
-    <label for="username">Username:</label>
-    <input type="text" name="username" id="username" required><br>
-    <label for="password">Password:</label>
-    <input type="password" name="password" id="password" required><br>
-    <input type="submit" value="Register">
-</form>
+<div class="card">
+    <div class="card-body">
+        <h1 class="card-title">Register</h1>
+        <form action="/register" method="post">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" class="form-control" name="username" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" name="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+    </div>
+</div>
 </body>
 </html>

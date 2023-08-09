@@ -4,19 +4,63 @@
 <head>
     <title>Anonymous Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        ul.list-group {
+            margin-top: 20px;
+        }
+
+        .message-box {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-4">Anonymous Chat</h1>
+    <h1>Anonymous Chat</h1>
 
-    {{ if .IsUser }}
+    {{ if .IsOwner }}
     <h2>Welcome, {{ .Username }}!</h2>
     {{ else }}
     <h2>Chat with {{ .Username }}!</h2>
     {{ end }}
 
     {{ if .IsUser }}
-    <div>
+    <div class="mt-4 message-box">
         <!-- Form to submit new message -->
         <form action="/send" method="post">
             <div class="mb-3">
@@ -36,9 +80,16 @@
     <div class="mt-4">
         <!-- Chat history display -->
         <h2>Chat History:</h2>
-        <ul>
+        <ul class="list-group">
             {{ range .Messages }}
-            <li><strong>{{ .Nickname }}:</strong> {{ .Text }}</li>
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <strong>{{ .Nickname }}:</strong> {{ .Text }}
+                    </div>
+                    <div class="text-muted">{{ .Timestamp }}</div>
+                </div>
+            </li>
             {{ end }}
         </ul>
     </div>
