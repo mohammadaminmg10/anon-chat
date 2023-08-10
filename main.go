@@ -29,7 +29,9 @@ func main() {
 
 	http.HandleFunc("/send", func(writer http.ResponseWriter, request *http.Request) { handlers.HandleSend(writer, request, DB) })
 
-	http.HandleFunc("/register", registration.HandleRegister)
+	http.HandleFunc("/register", func(writer http.ResponseWriter, request *http.Request) {
+		registration.HandleRegister(writer, request, DB)
+	})
 
 	http.HandleFunc("/user/", func(writer http.ResponseWriter, request *http.Request) { handlers.HandleForm(writer, request, DB) })
 
