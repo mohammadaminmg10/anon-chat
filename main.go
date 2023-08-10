@@ -24,6 +24,8 @@ func main() {
 		log.Fatal(err)
 	}
 	defer DB.Close()
+	// Assuming your static files are in the "static" directory
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	http.HandleFunc("/", handlers.HandleIndex)
 

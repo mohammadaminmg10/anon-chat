@@ -14,17 +14,7 @@ var templates = template.Must(template.ParseFiles("views/index.html"))
 var username string
 
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
-
-	userID := registration.GetUserID(r)
-
-	if registration.IsLoggedIn(r) {
-		// If the user is logged in, redirect to their own chat room
-		http.Redirect(w, r, "/user/"+userID, http.StatusSeeOther)
-		return
-	}
-
-	// If the user is not logged in, redirect to the registration page
-	http.Redirect(w, r, "/register", http.StatusSeeOther)
+	http.ServeFile(w, r, "views/landing.html")
 }
 
 func HandleSend(w http.ResponseWriter, r *http.Request, db *sql.DB) {
