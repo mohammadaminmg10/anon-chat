@@ -10,11 +10,11 @@ import (
 	"strings"
 )
 
-var templates = template.Must(template.ParseFiles("views/index.html"))
+var templates = template.Must(template.ParseFiles("docs/index.html"))
 var username string
 
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "views/landing.html")
+	http.ServeFile(w, r, "docs/landing.html")
 }
 
 func HandleSend(w http.ResponseWriter, r *http.Request, db *sql.DB) {

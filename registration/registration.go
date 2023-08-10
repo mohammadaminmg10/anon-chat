@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var registerTemplate = template.Must(template.ParseFiles("views/register.html"))
+var registerTemplate = template.Must(template.ParseFiles("docs/register.html"))
 
 type Claims struct {
 	Username string `json:"username"`
