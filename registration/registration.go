@@ -26,8 +26,6 @@ func setUserID(w http.ResponseWriter, username string, config config.Configurati
 		Value:    username,
 		HttpOnly: true,
 		Path:     "/",
-		// Add additional secure options as needed, such as Secure and SameSite,
-		// depending on your deployment environment.
 	}
 
 	http.SetCookie(w, &cookie)
