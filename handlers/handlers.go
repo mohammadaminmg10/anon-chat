@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"anon-chat/config"
 	"anon-chat/models"
 	"anon-chat/registration"
 	"database/sql"
@@ -39,8 +40,8 @@ func HandleSend(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 }
 
-func HandleForm(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	userID := registration.GetUserID(r)
+func HandleForm(w http.ResponseWriter, r *http.Request, db *sql.DB, config config.Configuration) {
+	userID := registration.GetUserID(r, config)
 
 	// Extract the username from the URL
 	username = strings.TrimPrefix(r.URL.Path, "/user/")

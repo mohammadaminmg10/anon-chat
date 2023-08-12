@@ -1,6 +1,7 @@
 package registration
 
 import (
+	"anon-chat/config"
 	"database/sql"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
@@ -18,16 +19,10 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-const jwtCookieName = "jwt_token"
-
-var jwtKey = []byte("n7hUjNdqoF9q5jSk3zDpW2vR1zHtY8dA")
-
-const cookieName = "user_cookie"
-
 // setUserID stores the user's username in a cookie (session).
-func setUserID(w http.ResponseWriter, username string) {
+func setUserID(w http.ResponseWriter, username string, config config.Configuration) {
 	cookie := http.Cookie{
-		Name:     cookieName,
+		Name:     config.Cookie.Name,
 		Value:    username,
 		HttpOnly: true,
 		Path:     "/",
@@ -39,8 +34,8 @@ func setUserID(w http.ResponseWriter, username string) {
 }
 
 // isLoggedIn checks if the user is already logged in by checking if the username cookie exists.
-func IsLoggedIn(r *http.Request) bool {
-	cookie, err := r.Cookie(cookieName)
+func IsLoggedIn(r *http.Request, config config.Configuration) bool {
+	cookie, err := r.Cookie(config.Cookie.Name)
 	if err == nil && cookie != nil {
 		return true
 	}
@@ -48,20 +43,20 @@ func IsLoggedIn(r *http.Request) bool {
 }
 
 // getUserID retrieves the user's username from the session (cookie).
-func GetUserID(r *http.Request) string {
-	cookie, err := r.Cookie(cookieName)
+func GetUserID(r *http.Request, config config.Configuration) string {
+	cookie, err := r.Cookie(config.Cookie.Name)
 	if err != nil {
 		return ""
 	}
 	return cookie.Value
 }
 
-func HandleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func HandleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB, configuration config.Configuration) {
 	if r.Method == http.MethodGet {
 		// Check if the user is already logged in
-		if IsLoggedIn(r) {
+		if IsLoggedIn(r, configuration) {
 			// If the user is already logged in, redirect to their chat room
-			http.Redirect(w, r, "/user/"+GetUserID(r), http.StatusSeeOther)
+			http.Redirect(w, r, "/user/"+GetUserID(r, configuration), http.StatusSeeOther)
 			return
 		}
 
@@ -82,8 +77,8 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		// Check if the user exists and authenticate
 		if AuthenticateUser(db, username, password) {
 			// If the user exists and password is correct, log them in
-			GenerateJWT(w, username, password)
-			setUserID(w, username)
+			GenerateJWT(w, username, password, configuration)
+			setUserID(w, username, configuration)
 			http.Redirect(w, r, "/usr/"+username, http.StatusSeeOther)
 			return
 		}
@@ -93,8 +88,8 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 			// If username is unique and password is valid, register the user
 			RegisterUser(db, username, password)
 			// Log in the user after registration
-			GenerateJWT(w, username, password)
-			setUserID(w, username)
+			GenerateJWT(w, username, password, configuration)
+			setUserID(w, username, configuration)
 			http.Redirect(w, r, "/usr/"+username, http.StatusSeeOther)
 			return
 		}
@@ -158,7 +153,7 @@ func AuthenticateUser(db *sql.DB, username, password string) bool {
 	return true
 }
 
-func GenerateJWT(w http.ResponseWriter, username, password string) {
+func GenerateJWT(w http.ResponseWriter, username, password string, config config.Configuration) {
 	expirationTime := time.Now().Add(5 * time.Minute)
 	claims := &Claims{
 		Username: username,
@@ -168,7 +163,7 @@ func GenerateJWT(w http.ResponseWriter, username, password string) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString([]byte(config.Jwt.JWTKey))
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -176,7 +171,7 @@ func GenerateJWT(w http.ResponseWriter, username, password string) {
 
 	// Set the JWT token as a cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:     jwtCookieName,
+		Name:     config.Cookie.Name,
 		Value:    tokenString,
 		Expires:  expirationTime,
 		HttpOnly: true,
