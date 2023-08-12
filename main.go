@@ -1,6 +1,7 @@
 package main
 
 import (
+	"anon-chat/config"
 	"anon-chat/handlers"
 	"anon-chat/registration"
 	"database/sql"
@@ -11,9 +12,7 @@ import (
 )
 
 func setupDB() (*sql.DB, error) {
-	connStr := "postgres://moamin:1TLkY3LVPsffik92zVZf33eiXv2wacMM@dpg-cjad7f6e546c738c72o0-a.oregon-postgres.render.com/anonchat"
-	db, err := sql.Open("postgres", connStr)
-	//	db, err := sql.Open("postgres", "dbname=anonchat user=moamin password=1TLkY3LVPsffik92zVZf33eiXv2wacMM host=dpg-cjad7f6e546c738c72o0-a port=5432 sslmode=disable")
+	db, err := sql.Open("postgres", "dbname=AnonChat user=root password=DiKgtuqxrJU9cdJOZgtnJull host=alfie.iran.liara.ir port=34009 sslmode=disable")
 	if err != nil {
 		return nil, err
 	}
@@ -26,36 +25,16 @@ func main() {
 		log.Fatal(err)
 	}
 	defer DB.Close()
-	_, err = DB.Exec(`
-       CREATE SCHEMA anonchat;
-    `)
-	// Create the "messages" table
-	_, err = DB.Exec(`
-        CREATE TABLE IF NOT EXISTS AnonChat.messages (
-            id SERIAL PRIMARY KEY,
-            user_id VARCHAR(50) NOT NULL,
-            nickname VARCHAR(50),
-            text TEXT NOT NULL,
-            timestamp TIMESTAMPTZ NOT NULL
-        );
-    `)
+	configFilename := "config/config.json"
+	cfg, err := config.LoadConfig(configFilename)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error loading configuration:", err)
+		return
 	}
-	fmt.Println("Messages table created successfully.")
 
-	// Create the "users" table
-	_, err = DB.Exec(`
-        CREATE TABLE IF NOT EXISTS AnonChat.users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(100) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL
-        );
-    `)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Users table created successfully.")
+	fmt.Println("Database Host:", cfg.Database.Host)
+	fmt.Println("Database Port:", cfg.Database.Port)
+	fmt.Println("JWT Secret:", cfg.Jwt.JWTKey)
 	// Assuming your static files are in the "static" directory
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
